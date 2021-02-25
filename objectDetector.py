@@ -16,7 +16,6 @@ cap.set(10,70)
 
 classNames= []
 person_dict = dict()
-
 tempCoor = dict()
 
 boundary1 = 480
@@ -46,7 +45,8 @@ def checkLineCrossing(x,coorXLine):
 def checkZoneCrossing(x,y,direction):
     bound1Distance = abs(x-boundary1)
     bound2Distance = abs(x-boundary2)
-    if bound1Distance<bound2Distance and direction == 1:
+    #print("bound1 dis: "+str(bound1Distance)+", bound2 dis: "+str(bound2Distance) + ", direction: "+str(direction))
+    if bound2Distance>bound1Distance and direction == 1:
         return 1 #person enter from boundary 1
     if bound2Distance<bound1Distance and direction == 0:
         return 0 #person enter from boundary 2
@@ -101,6 +101,8 @@ while True:
         if classIds[i][0] == 1: #person
             box = bbox[i]
             x,y,w,h = box[0],box[1],box[2],box[3]
+            coorXCentroid_float = (x+x+w)/2
+            coorYCentroid_float = (y+y+h)/2
             coorXCentroid = int((x+x+w)/2)
             coorYCentroid = int((y+y+h)/2)
             personCentroid = (coorXCentroid,coorYCentroid)
@@ -121,10 +123,10 @@ while True:
                 coorCentroid_prev = [0,0]
                 #coorXCentroid_prev,coorYCentroid_prev=0,0
 
-            direction = checkDirection(coorCentroid_prev[0],coorXCentroid,coorCentroid_prev[1],coorYCentroid)
+            direction = checkDirection(coorCentroid_prev[0],coorXCentroid_float,coorCentroid_prev[1],coorYCentroid_float)
             #set previous coordinate
-            coorXCentroid_prev = coorXCentroid
-            coorYCentroid_prev = coorYCentroid
+            coorXCentroid_prev = coorXCentroid_float
+            coorYCentroid_prev = coorYCentroid_float
             #tempCoor.insert(i,[coorXCentroid_prev,coorYCentroid_prev])
             tempCoor[i] = [coorXCentroid_prev,coorYCentroid_prev]
 
@@ -133,13 +135,15 @@ while True:
                 if i in person_dict.keys():
                     continue
                 else:
-                    enter = checkZoneCrossing(coorXCentroid,coorYCentroid,i)
+                    enter = checkZoneCrossing(coorXCentroid,coorYCentroid,direction)
+                    if enter is None:
+                        continue
                     person_dict[i] = enter
             if i in person_dict.keys():
                 if coorXCentroid<ex_boundary1 and person_dict.get(i) == 0:
                     person_dict.pop(i)
                     exitCount += 1
-                elif coorXCentroid>ex_boundary1 and person_dict.get(i) == 1:
+                elif coorXCentroid>ex_boundary2 and person_dict.get(i) == 1:
                     person_dict.pop(i)
                     enterCount += 1
                 else:
