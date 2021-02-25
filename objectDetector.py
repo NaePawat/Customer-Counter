@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import time
 
 threshold = 0.45 # Threshold to detect object
 nms_threshold = 0.5
@@ -9,10 +10,11 @@ id_count = 0
 offsetRefLines = 150
 offXRef = 600
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(3,1280)
 cap.set(4,720)
 cap.set(10,70)
+cap.set(5,30)
 
 classNames= []
 person_dict = dict()
@@ -22,6 +24,9 @@ boundary1 = 480
 boundary2 = 720
 ex_boundary1 = 240
 ex_boundary2 = 960
+
+prev_frame = 0
+new_frame = 0
 
 classFile = 'coco.names'
 with open(classFile,'rt') as f:
@@ -71,15 +76,18 @@ def checkDirection(prev_x,cur_x,prev_y,cur_y):
     if deltaX < 0:
         return 0 #walk to left
 while True:
-
+    # fps = cap.get(cv2.CAP_PROP_FPS)
+    # print(int(fps))
+    new_frame = time.time()
+    fps = int(1/(new_frame-prev_frame))
+    prev_frame = new_frame
     #fps calculation
-    timer = cv2.getTickCount()
-    success,img = cap.read()
-    fps = cv2.getTickFrequency()/(cv2.getTickCount()-timer)
-    cv2.putText(img,str(int(fps)),(960,50),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,0,255),2)
+    success, img = cap.read()
+    # fps = cv2.getTickFrequency()/(cv2.getTickCount()-timer)
+    # cv2.putText(img,str(int(fps)),(960,50),cv2.FONT_HERSHEY_COMPLEX,0.7,(0,0,255),2)
+    cv2.putText(img, str(fps), (960, 50), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0, 0, 255), 2)
 
     #detect boundary
-    #cv2.line(img,(offXRef,0),(offXRef,720),(255,0,0),thickness=2)
     cv2.rectangle(img,(boundary1,0),(boundary2,720),color = (255,255,0),thickness=2)
 
     #exit boundary
@@ -154,7 +162,7 @@ while True:
             #     else:
             #         enterCount += 1
             #         setId(i)
-    print(person_dict)
+    #print(person_dict)
     cv2.putText(img, "Entrances: {}".format(str(enterCount)), (10, 50),
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (250, 0, 1), 2)
     cv2.putText(img, "Exit: {}".format(str(exitCount)), (10, 80),
